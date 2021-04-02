@@ -43,13 +43,14 @@
 # until hit start
 
 class Node:
-    def __init__(self, x, y):
+    def __init__(self, x, y, is_obstacle):
         self.parent = None
         self.x = x
         self.y = y
         self.h_cost = None
         self.g_cost = None
         self.f_cost = None
+        self.is_obstacle = is_obstacle
 
     def update_costs(self):
         self.update_g_cost()
@@ -76,21 +77,37 @@ class Grid:
         self.x_size, self.y_size = size
         self.obstacles = obstacles
         self.nodes = []
+        self.node_matrix = [[] for i in range(self.y_size)]
         self.create_nodes()
 
     def create_nodes(self):
-        for x in range(self.x_size):
-            for y in range(self.y_size):
+        for y in range(self.y_size):
+            for x in range(self.x_size):
+
+                # check if its an obstacle
+                if (x, y) in self.obstacles:
+                    is_obstacle = True
+                else:
+                    is_obstacle = False
+
+                # get the node
+                node = Node(x, y, is_obstacle)
+
+                # see if its the start or end node
                 if (x, y) == self.start_pos:
-                    self.start_node = Node(x, y)
+                    self.start_node = node
                 elif (x, y) == self.end_node:
-                    self.end_node = Node(x, y)
-                if (x, y) not in self.obstacles:
-                    self.nodes.append(Node(x, y))
+                    self.end_node = node
+
+                # add to node list and matrix
+                self.node_matrix[y].append(node)
+                self.nodes.append(node)
+
+    def node_at(self, x, y):
+        return self.node_matrix[y][x]
 
     def find_path(self):
         # this is the MAIN LOOP
-        # do the loop
         # return a path with all coordinates
         green_nodes = []  # all neighboring nodes to be explored
         red_nodes = []  # all nodes already explored
@@ -116,14 +133,32 @@ class Grid:
 
             # check all neighboring nodes
             for neighbour in self.get_neighbors(current):
-                pass
+
+                # check if valid node
+                if neighbour.is_obstacle or neighbour in red_nodes:
+                    continue
+
+                # tbc
+
 
     def get_neighbors(self, node):
+
+        # keep track of neighbors
         neighbors = []
+
+        # look at all 8 positions around node
         for x in range(-1, 2):
             for y in range(-1, 2):
+
                 # make sure not looking at self position
                 if x == 0 and y == 0:
                     continue
 
-                for node in
+                # within bounds?
+                if 0 <= node.x + x <= self.x_size and 0 <= node.y + y <= self.y_size:
+
+                    # add neighbor to neighbors
+                    neighbor = self.node_at(node.x + x, node.y + y)
+                    neighbors.append(neighbor)
+
+        return neighbors
