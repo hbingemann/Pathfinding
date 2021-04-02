@@ -1,5 +1,5 @@
 
-
+from aStar import Grid
 
 if __name__ == '__main__':
-    pass
+    current_grid = Grid()
