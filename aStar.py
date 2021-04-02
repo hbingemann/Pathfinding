@@ -43,33 +43,22 @@
 # that parents parent ...
 # until hit start
 
-class Node:
+class _Node:
     def __init__(self, x, y, is_obstacle):
         self.parent = None
         self.x = x
         self.y = y
-        self.h_cost = None
-        self.g_cost = None
-        self.f_cost = None
+        self.h_cost = None  # distance from end
+        self.g_cost = None  # distance from start
         self.is_obstacle = is_obstacle
 
-    def update_costs(self):
-        self.update_g_cost()
-        self.update_f_cost()
-        self.update_h_cost()
-
-    def update_f_cost(self):  # g_cost + h_cost
-        pass
-
-    def update_g_cost(self):  # distance from start node through red nodes
-        pass
-
-    def update_h_cost(self):  # distance from end node
-        pass
+        @property
+        def f_cost(self):
+            return self.g_cost + self.h_cost
 
 
 class Grid:
-    def __init__(self, start_pos, end_pos, size, obstacles):
+    def __init__(self, start_pos, end_pos, size, obstacles=()):
         self.start_node = None
         self.start_pos = start_pos
         self.end_node = None
@@ -80,9 +69,9 @@ class Grid:
         self.nodes = []
         self.node_matrix = [[] for i in range(self.y_size)]
         self.path = []
-        self.create_nodes()
+        self._create_nodes()
 
-    def create_nodes(self):
+    def _create_nodes(self):
         for y in range(self.y_size):
             for x in range(self.x_size):
 
@@ -93,7 +82,7 @@ class Grid:
                     is_obstacle = False
 
                 # get the node
-                node = Node(x, y, is_obstacle)
+                node = _Node(x, y, is_obstacle)
 
                 # see if its the start or end node
                 if (x, y) == self.start_pos:
@@ -105,12 +94,16 @@ class Grid:
                 self.node_matrix[y].append(node)
                 self.nodes.append(node)
 
-    def node_at(self, x, y):
+        # set the values for starting node
+        self.start_node.h_cost = self._get_distance(self.start_node, self.end_node)
+        self.start_node.g_cost = 0
+
+    def _node_at(self, x, y):
         return self.node_matrix[y][x]
 
-    def find_path(self):
+    def find_path(self, delay: float) -> list:
         # this is the MAIN LOOP
-        # return a path with all coordinates
+        # return a list path with all coordinates in the path
         green_nodes = []  # all neighboring nodes to be explored
         red_nodes = []  # all nodes already explored
         green_nodes.append(self.start_node)
@@ -134,24 +127,24 @@ class Grid:
                 return self.retrace_path()
 
             # check all neighboring nodes
-            for neighbor in self.get_neighbors(current):
+            for neighbor in self._get_neighbors(current):
 
                 # check if valid node
                 if neighbor.is_obstacle or neighbor in red_nodes:
                     continue
 
                 # see what to do with the neighbor
-                new_neighbor_g_cost = current.g_cost + self.get_distance(current, neighbor)
+                new_neighbor_g_cost = current.g_cost + self._get_distance(current, neighbor)
 
                 if neighbor not in green_nodes or new_neighbor_g_cost < neighbor.g_cost:
                     neighbor.g_cost = new_neighbor_g_cost
-                    neighbor.h_cost = self.get_distance(neighbor, self.end_node)
+                    neighbor.h_cost = self._get_distance(neighbor, self.end_node)
                     neighbor.parent = current
 
                     if neighbor not in green_nodes:
                         green_nodes.append(neighbor)
 
-    def get_retraced_path(self):
+    def _get_retraced_path(self):
         path = []
         current = self.end_node
 
@@ -165,7 +158,7 @@ class Grid:
 
         return path
 
-    def get_distance(self, node1, node2):
+    def _get_distance(self, node1, node2):
 
         # get distances
         x_distance = abs(node1.x - node2.x)
@@ -176,7 +169,7 @@ class Grid:
             return 14 * y_distance + 10 * (x_distance - y_distance)
         return 14 * x_distance + 10 * (y_distance - x_distance)
 
-    def get_neighbors(self, node):
+    def _get_neighbors(self, node):
 
         # keep track of neighbors
         neighbors = []
@@ -192,7 +185,7 @@ class Grid:
                 # within bounds?
                 if 0 <= node.x + x <= self.x_size and 0 <= node.y + y <= self.y_size:
                     # add neighbor to neighbors
-                    neighbor = self.node_at(node.x + x, node.y + y)
+                    neighbor = self._node_at(node.x + x, node.y + y)
                     neighbors.append(neighbor)
 
         return neighbors
