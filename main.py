@@ -10,6 +10,7 @@ SQUARE_SIZE = 20
 FPS = 60
 
 # colors
+INFO_COLOR = (40, 40, 40)  # light blue
 BACKGROUND_COLOR = (210, 210, 210)  # almost white
 GRID_COLOR = (60, 60, 60)  # almost black
 OBSTACLE_COLOR = (20, 20, 20)  # black
@@ -18,6 +19,30 @@ END_COLOR = (191, 105, 23)  # orange
 PATH_COLOR = (38, 96, 166)  # blue
 GREEN = (47, 168, 83)
 RED = (220, 0, 0)
+
+
+def draw_info(screen, show):
+    if not show:
+        return
+    font = pygame.font.SysFont("Ubuntu", 20)
+    info = " c = clear |" \
+           " p = delete path |" \
+           " space = continuously draw path |" \
+           " return = visualize process |" \
+           " backspace = remove last obstacle |" \
+           " left click = draw |" \
+           " right click = erase |" \
+           " i = hide/show info"
+    infos = info.split("|")
+    text_boxes = []
+    for string in infos:
+        text = font.render(string, True, INFO_COLOR, BACKGROUND_COLOR)
+        text_boxes.append(text)
+    for i, text in enumerate(text_boxes):
+        x_pos = WIDTH - text.get_width() - 20
+        y_pos = (text.get_height() + 5) * i
+        screen.blit(text, (x_pos, y_pos))
+    pass
 
 
 def draw_background(screen):
@@ -52,10 +77,6 @@ def visualize_algorithm(screen, grid):
 
     # start the process
     grid.start_tick_process()
-
-    # reset the screen
-    draw_background(screen)
-    draw_squares_at(screen, grid.obstacles, OBSTACLE_COLOR)
 
     # starting main loop
     run = True
@@ -111,6 +132,7 @@ def main():
     mouse_on_start = False
     mouse_on_end = False
     keep_finding_path = False
+    show_info = True
     path = []
 
     obstacles = []
@@ -183,6 +205,10 @@ def main():
 
                 # start calculating button
                 elif event.key == pygame.key.key_code("return"):
+                    # reset the screen
+                    draw_background(screen)
+                    draw_squares_at(screen, grid.obstacles, OBSTACLE_COLOR)
+                    # now visualize
                     path = visualize_algorithm(screen, grid)
 
                 # always draw the path button
@@ -193,7 +219,12 @@ def main():
 
                 # remove most recently created obstacle
                 elif event.key == pygame.key.key_code("backspace"):
-                    obstacles.pop()
+                    if len(obstacles) > 0:
+                        obstacles.pop()
+
+                # hide and show info
+                elif event.key == pygame.key.key_code("i"):
+                    show_info = not show_info
 
         pos = pygame.mouse.get_pos()
         mouse_grid_pos = pos[0] // SQUARE_SIZE, pos[1] // SQUARE_SIZE
@@ -220,6 +251,7 @@ def main():
         draw_squares_at(screen, path, PATH_COLOR)
         draw_square_at(screen, start, START_COLOR)
         draw_square_at(screen, end, END_COLOR)
+        draw_info(screen, show_info)
         pygame.display.update()
 
 
