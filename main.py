@@ -1,4 +1,3 @@
-
 import pygame
 
 from aStar import Grid
@@ -11,12 +10,14 @@ SQUARE_SIZE = 20  # the path will be represented by these squares
 FPS = 60
 
 # colors
-BACKGROUND_COLOR = (210, 210, 210)
-GRID_COLOR = (60, 60, 60)
-OBSTACLE_COLOR = (20, 20, 20)
-START_COLOR = (209, 204, 44)
-END_COLOR = (47, 168, 83)
-PATH_COLOR = (38, 96, 166)
+BACKGROUND_COLOR = (210, 210, 210)  # almost white
+GRID_COLOR = (60, 60, 60)  # almost black
+OBSTACLE_COLOR = (20, 20, 20)  # black
+START_COLOR = (209, 204, 44)  # yellowish
+END_COLOR = (191, 105, 23)  # orange
+PATH_COLOR = (38, 96, 166)  # blue
+GREEN = (47, 168, 83)
+RED = (220, 0, 0)
 
 
 def draw_background(screen):
@@ -42,11 +43,70 @@ def draw_square_at(surface, square_pos, color):
     pygame.draw.rect(surface, color, rect)
 
 
+def visualize_algorithm(screen, grid):
+    # this is the loop that will show the algorithm in action
+
+    # set some useful variables
+    time_since_action = 0
+    time_between_actions = 10  # in milliseconds
+
+    # start the process
+    grid.start_tick_process()
+
+    # reset the screen
+    draw_background(screen)
+    draw_squares_at(screen, grid.obstacles, OBSTACLE_COLOR)
+
+    # starting main loop
+    run = True
+    clock = pygame.time.Clock()
+    while run:
+
+        # regulate game speed
+        clock.tick(FPS)
+        time_since_action += clock.get_time()
+
+        # check events
+        for event in pygame.event.get():
+
+            # close window
+            if event.type == pygame.QUIT:
+                pygame.event.post(pygame.event.Event(pygame.QUIT))
+                run = False
+
+            # end the process
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.key.key_code("return"):
+                    return []
+
+        # check if process can be continued
+        if time_since_action > time_between_actions:
+            time_since_action = 0
+            path = grid.tick_process()
+            if path is not None:
+                # we found a solution
+                # it will return [] if there was no solution
+                # and a list of coords if there was a solution
+                return path
+
+        # create positions from objects
+        green_positions = [(node.x, node.y) for node in grid.green_nodes]
+        red_positions = [(node.x, node.y) for node in grid.red_nodes]
+
+        # now draw what has happened
+        draw_squares_at(screen, green_positions, GREEN)
+        draw_squares_at(screen, red_positions, RED)
+        draw_square_at(screen, grid.start_pos, START_COLOR)
+        draw_square_at(screen, grid.end_pos, END_COLOR)
+        pygame.display.update()
+
+
 def main():
     # setting some values that will be useful
     screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption('PATHFINDING')
 
+    mouse_deleting_obstacles = False
     mouse_drawing_obstacles = False
     mouse_on_start = False
     mouse_on_end = False
@@ -75,35 +135,42 @@ def main():
 
             # mouse down
             if event.type == pygame.MOUSEBUTTONDOWN:
+                # left click
                 if event.button == 1:
-                    x, y = pygame.mouse.get_pos()
-                    grid_pos = (x // SQUARE_SIZE, y // SQUARE_SIZE)
-                    if grid_pos == start:
+                    pos = pygame.mouse.get_pos()
+                    mouse_grid_pos = pos[0] // SQUARE_SIZE, pos[1] // SQUARE_SIZE
+                    if mouse_grid_pos == grid.start_pos:
                         mouse_on_start = True
-                    elif grid_pos == end:
+                    elif mouse_grid_pos == grid.end_pos:
                         mouse_on_end = True
                     else:
                         mouse_drawing_obstacles = True
+
+                # right click
+                elif event.button == 3:
+                    mouse_deleting_obstacles = True
 
             # mouse up
             if event.type == pygame.MOUSEBUTTONUP:
 
                 # left click
                 if event.button == 1:
-                    mouse_drawing_obstacles = False
-                    x, y = pygame.mouse.get_pos()
+                    pos = pygame.mouse.get_pos()
+                    mouse_grid_pos = pos[0] // SQUARE_SIZE, pos[1] // SQUARE_SIZE
                     if mouse_on_end:
-                        end = (x // SQUARE_SIZE, y // SQUARE_SIZE)
-                        grid.end_node.x, grid.end_node.y = end
+                        end = mouse_grid_pos
+                        grid.end_pos = end
                     elif mouse_on_start:
-                        start = (x // SQUARE_SIZE, y // SQUARE_SIZE)
-                        grid.start_node.x, grid.start_node.y = start
+                        start = mouse_grid_pos
+                        grid.start_pos = start
+                    # set them all to false
+                    mouse_drawing_obstacles = False
                     mouse_on_end = False
                     mouse_on_start = False
 
                 # right click
                 elif event.button == 3:
-                    pass
+                    mouse_deleting_obstacles = False
 
             # button down
             if event.type == pygame.KEYDOWN:
@@ -115,13 +182,29 @@ def main():
 
                 # start calculating button
                 elif event.key == pygame.key.key_code("return"):
-                    path = grid.find_path(0)
+                    path = visualize_algorithm(screen, grid)
+
+                # remove most recently created obstacle
+                elif event.key == pygame.key.key_code("backspace"):
+                    obstacles.pop()
+
+        pos = pygame.mouse.get_pos()
+        mouse_grid_pos = pos[0] // SQUARE_SIZE, pos[1] // SQUARE_SIZE
 
         if mouse_drawing_obstacles:
-            x, y = pygame.mouse.get_pos()
-            obstacle = x // SQUARE_SIZE, y // SQUARE_SIZE
-            obstacles.append(obstacle)
-            grid.obstacles = obstacles
+            obstacle = mouse_grid_pos
+            if obstacle not in obstacles:
+                obstacles.append(obstacle)
+                grid.obstacles = obstacles
+        elif mouse_deleting_obstacles:
+            if mouse_grid_pos in obstacles:
+                obstacles.remove(mouse_grid_pos)
+        elif mouse_on_end:
+            end = mouse_grid_pos
+            grid.end_pos = mouse_grid_pos
+        elif mouse_on_start:
+            start = mouse_grid_pos
+            grid.start_pos = mouse_grid_pos
 
         draw_background(screen)
         draw_squares_at(screen, obstacles, OBSTACLE_COLOR)

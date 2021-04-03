@@ -73,6 +73,7 @@ class Grid:
         self.path = []
         self.green_nodes = []
         self.red_nodes = []
+        self._create_nodes()
 
     def _create_nodes(self):
         self.nodes = []
@@ -106,8 +107,53 @@ class Grid:
     def _node_at(self, x, y):
         return self.node_matrix[y][x]
 
-    def find_path(self, delay: float) -> list:
-        # this is the MAIN LOOP
+    def start_tick_process(self):
+        self._create_nodes()
+        self.green_nodes = []  # all neighboring nodes to be explored
+        self.red_nodes = []  # all nodes already explored
+        self.green_nodes.append(self.start_node)
+
+    def tick_process(self):
+        if len(self.green_nodes) > 0:
+
+            # get the lowest cost node
+            # will optimize later
+            lowest_f_cost = min([node.f_cost for node in self.green_nodes])
+            lowest_h_cost = min([node.h_cost for node in self.green_nodes if node.f_cost == lowest_f_cost])
+            lowest_cost_nodes = [node for node in self.green_nodes if node.h_cost == lowest_h_cost]
+            current = lowest_cost_nodes[0]
+
+            # remove the node from green nodes and add it to red nodes
+            self.green_nodes.remove(current)
+            self.red_nodes.append(current)
+
+            # check if we reached the end
+            if current == self.end_node:
+                return self._get_retraced_path()
+
+            # check all neighboring nodes
+            for neighbor in self._get_neighbors(current):
+
+                # check if valid node
+                if neighbor.is_obstacle or neighbor in self.red_nodes:
+                    continue
+
+                # see what to do with the neighbor
+                new_neighbor_g_cost = current.g_cost + self._get_distance(current, neighbor)
+
+                if neighbor not in self.green_nodes or new_neighbor_g_cost < neighbor.g_cost:
+                    neighbor.g_cost = new_neighbor_g_cost
+                    neighbor.h_cost = self._get_distance(neighbor, self.end_node)
+                    neighbor.parent = current
+
+                    if neighbor not in self.green_nodes:
+                        self.green_nodes.append(neighbor)
+        else:
+            return []  # since there is no path
+        return  # so that the process knows nothing happened
+
+    def find_path(self) -> list:
+        # this will find path instantly
         # return a list path with all coordinates in the path
         self._create_nodes()
         self.green_nodes = []  # all neighboring nodes to be explored
@@ -115,8 +161,6 @@ class Grid:
         self.green_nodes.append(self.start_node)
 
         while len(self.green_nodes) > 0:
-
-            time.sleep(delay)
 
             # get the lowest cost node
             # will optimize later
