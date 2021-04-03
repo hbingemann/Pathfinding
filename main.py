@@ -6,7 +6,7 @@ pygame.init()
 
 # global constants
 SIZE = WIDTH, HEIGHT = 1000, 860
-SQUARE_SIZE = 20  # the path will be represented by these squares
+SQUARE_SIZE = 20
 FPS = 60
 
 # colors
@@ -110,6 +110,7 @@ def main():
     mouse_drawing_obstacles = False
     mouse_on_start = False
     mouse_on_end = False
+    keep_finding_path = False
     path = []
 
     obstacles = []
@@ -184,6 +185,12 @@ def main():
                 elif event.key == pygame.key.key_code("return"):
                     path = visualize_algorithm(screen, grid)
 
+                # always draw the path button
+                elif event.key == pygame.key.key_code("space"):
+                    keep_finding_path = not keep_finding_path
+                    if not keep_finding_path:
+                        path = []
+
                 # remove most recently created obstacle
                 elif event.key == pygame.key.key_code("backspace"):
                     obstacles.pop()
@@ -205,6 +212,8 @@ def main():
         elif mouse_on_start:
             start = mouse_grid_pos
             grid.start_pos = mouse_grid_pos
+        if keep_finding_path:
+            path = grid.find_path()
 
         draw_background(screen)
         draw_squares_at(screen, obstacles, OBSTACLE_COLOR)
