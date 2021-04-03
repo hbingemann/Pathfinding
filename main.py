@@ -6,7 +6,7 @@ from aStar import Grid
 pygame.init()
 
 # global constants
-SIZE = WIDTH, HEIGHT = 1000, 850
+SIZE = WIDTH, HEIGHT = 1000, 860
 SQUARE_SIZE = 20  # the path will be represented by these squares
 FPS = 60
 
@@ -47,7 +47,9 @@ def main():
     screen = pygame.display.set_mode(SIZE)
     pygame.display.set_caption('PATHFINDING')
 
-    mouse_down = False
+    mouse_drawing_obstacles = False
+    mouse_on_start = False
+    mouse_on_end = False
     path = []
 
     obstacles = []
@@ -74,14 +76,30 @@ def main():
             # mouse down
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    mouse_down = True
+                    x, y = pygame.mouse.get_pos()
+                    grid_pos = (x // SQUARE_SIZE, y // SQUARE_SIZE)
+                    if grid_pos == start:
+                        mouse_on_start = True
+                    elif grid_pos == end:
+                        mouse_on_end = True
+                    else:
+                        mouse_drawing_obstacles = True
 
             # mouse up
             if event.type == pygame.MOUSEBUTTONUP:
 
                 # left click
                 if event.button == 1:
-                    mouse_down = False
+                    mouse_drawing_obstacles = False
+                    x, y = pygame.mouse.get_pos()
+                    if mouse_on_end:
+                        end = (x // SQUARE_SIZE, y // SQUARE_SIZE)
+                        grid.end_node.x, grid.end_node.y = end
+                    elif mouse_on_start:
+                        start = (x // SQUARE_SIZE, y // SQUARE_SIZE)
+                        grid.start_node.x, grid.start_node.y = start
+                    mouse_on_end = False
+                    mouse_on_start = False
 
                 # right click
                 elif event.button == 3:
@@ -99,7 +117,7 @@ def main():
                 elif event.key == pygame.key.key_code("return"):
                     path = grid.find_path(0)
 
-        if mouse_down:
+        if mouse_drawing_obstacles:
             x, y = pygame.mouse.get_pos()
             obstacle = x // SQUARE_SIZE, y // SQUARE_SIZE
             obstacles.append(obstacle)
