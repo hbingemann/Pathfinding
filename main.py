@@ -202,6 +202,7 @@ def main():
                 if event.key == pygame.key.key_code("c"):
                     obstacles = []
                     path = []
+                    grid.obstacles = obstacles
 
                 # start calculating button
                 elif event.key == pygame.key.key_code("return"):
@@ -225,6 +226,10 @@ def main():
                 # hide and show info
                 elif event.key == pygame.key.key_code("i"):
                     show_info = not show_info
+
+                # delete path
+                elif event.key == pygame.key.key_code("p"):
+                    path = []
 
         pos = pygame.mouse.get_pos()
         mouse_grid_pos = pos[0] // SQUARE_SIZE, pos[1] // SQUARE_SIZE
