@@ -45,6 +45,7 @@
 
 import time
 
+
 class _Node:
     def __init__(self, x, y, is_obstacle):
         self.parent = None

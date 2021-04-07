@@ -1,6 +1,6 @@
 import pygame
 
-from aStar import Grid
+from aStar import Grid as AStarGrid
 
 pygame.init()
 
@@ -140,7 +140,7 @@ def main():
     start = (0, 0)
     end = (12, 12)
 
-    grid = Grid(start, end, grid_size, obstacles)
+    grid = AStarGrid(start, end, grid_size, obstacles)
 
     # starting main loop
     run = True
