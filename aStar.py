@@ -44,12 +44,22 @@
 # until hit start
 
 import time
+import math
+
+import pygame.draw
+
+WHITE = (220, 220, 220)
+SQUARE_SIZE = 20
+
+
+def sign(n):
+    return 1 if n > 0 else 0 if n == 0 else -1
 
 
 class _Node:
     def __init__(self, x, y, is_obstacle):
         self.parent = None
-        self.x = x
+        self.x = x  # top left
         self.y = y
         self.h_cost = None  # distance from end
         self.g_cost = None  # distance from start
@@ -58,6 +68,33 @@ class _Node:
     @property
     def f_cost(self):
         return self.g_cost + self.h_cost
+
+    def draw_pointer_to_parent(self, screen):
+        if self.parent is None:
+            return
+        # points to create an upwards facing triangle
+        line1_points = [(10, 8), (7, 13)]
+        line2_points = [(10, 8), (13, 13)]
+        # create a surface that we will draw the triangle on
+        pointer_surface = pygame.surface.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
+        # calculate the rotation to point to parent
+        dir_x, dir_y = sign(self.parent.x - self.x), sign(self.parent.y - self.y)
+        # huh... cooles equation nicht?
+        pointer_rotation = dir_x * dir_y * 45 \
+                            + abs(abs(dir_x) - 1) * abs(dir_y) * (dir_y + 1) * 90 \
+                            + dir_x * 90
+        # draw on the surface
+        pygame.draw.line(pointer_surface, WHITE, line1_points[0], line1_points[1], 2)
+        pygame.draw.line(pointer_surface, WHITE, line2_points[0], line2_points[1], 2)
+        # rotate the surface
+        pointer_surface = pygame.transform.rotate(pointer_surface, -pointer_rotation)
+        # if the arrow is pointing diagonal
+        move_x, move_y = 0, 0
+        if pointer_rotation % 90 == 45:
+            move_y -= 3
+            move_x -= 3
+        # draw surface on screen
+        screen.blit(pointer_surface, (self.x * SQUARE_SIZE + move_x, self.y * SQUARE_SIZE + move_y))
 
 
 class Grid:

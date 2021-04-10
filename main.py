@@ -75,12 +75,17 @@ def draw_square_at(surface, square_pos, color):
     pygame.draw.rect(surface, color, rect)
 
 
+def draw_node_pointers(screen, nodes):
+    for node in nodes:
+        node.draw_pointer_to_parent(screen)
+
+
 def visualize_algorithm(screen, grid):
     # this is the loop that will show the algorithm in action
 
     # set some useful variables
     time_since_action = 0
-    time_between_actions = 10  # in milliseconds
+    time_between_actions = 100  # in milliseconds
 
     # start the process
     grid.start_tick_process()
@@ -126,6 +131,7 @@ def visualize_algorithm(screen, grid):
         draw_squares_at(screen, red_positions, RED)
         draw_square_at(screen, grid.start_pos, START_COLOR)
         draw_square_at(screen, grid.end_pos, END_COLOR)
+        draw_node_pointers(screen, grid.red_nodes)
         pygame.display.update()
 
 
@@ -276,6 +282,7 @@ def main():
         draw_square_at(screen, start, START_COLOR)
         draw_square_at(screen, end, END_COLOR)
         draw_info(screen, grid, show_info)
+        draw_node_pointers(screen, grid.red_nodes + grid.green_nodes)
         pygame.display.update()
 
 
