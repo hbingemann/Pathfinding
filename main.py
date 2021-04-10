@@ -85,7 +85,7 @@ def visualize_algorithm(screen, grid):
 
     # set some useful variables
     time_since_action = 0
-    time_between_actions = 100  # in milliseconds
+    time_between_actions = 10  # in milliseconds
 
     # start the process
     grid.start_tick_process()
