@@ -1,4 +1,5 @@
 import pygame
+import time
 
 from aStar import Grid as AStarGrid
 
@@ -21,23 +22,29 @@ GREEN = (47, 168, 83)
 RED = (220, 0, 0)
 
 
-def draw_info(screen, show):
+def draw_info(screen, grid, show):
     if not show:
         return
     font = pygame.font.SysFont("Ubuntu", 20)
-    info = " c = clear |" \
-           " p = delete path |" \
+    info = " c = clear everything |" \
+           " p = clear path |" \
            " space = continuously draw path |" \
            " return = visualize process |" \
            " backspace = remove last obstacle |" \
            " left click = draw |" \
            " right click = erase |" \
-           " i = hide/show info"
+           " i = hide/show info "
     infos = info.split("|")
     text_boxes = []
+    # make infos
     for string in infos:
         text = font.render(string, True, INFO_COLOR, BACKGROUND_COLOR)
         text_boxes.append(text)
+    # add a including diagonals indicator
+    put_state = "off" if grid.look_diagonal else "on"
+    text = font.render("d = turn diagonals " + put_state, True, INFO_COLOR, BACKGROUND_COLOR)
+    text_boxes.append(text)
+    # draw infos
     for i, text in enumerate(text_boxes):
         x_pos = WIDTH - text.get_width() - 20
         y_pos = (text.get_height() + 5) * i
@@ -203,6 +210,8 @@ def main():
                     obstacles = []
                     path = []
                     grid.obstacles = obstacles
+                    grid.green_nodes = []
+                    grid.red_nodes = []
 
                 # start calculating button
                 elif event.key == pygame.key.key_code("return"):
@@ -230,6 +239,12 @@ def main():
                 # delete path
                 elif event.key == pygame.key.key_code("p"):
                     path = []
+                    grid.green_nodes = []
+                    grid.red_nodes = []
+
+                # show turn off diagonals
+                elif event.key == pygame.key.key_code("d"):
+                    grid.look_diagonal = not grid.look_diagonal
 
         pos = pygame.mouse.get_pos()
         mouse_grid_pos = pos[0] // SQUARE_SIZE, pos[1] // SQUARE_SIZE
@@ -252,11 +267,13 @@ def main():
             path = grid.find_path()
 
         draw_background(screen)
-        draw_squares_at(screen, obstacles, OBSTACLE_COLOR)
+        draw_squares_at(screen, [(node.x, node.y) for node in grid.green_nodes], GREEN)
+        draw_squares_at(screen, [(node.x, node.y) for node in grid.red_nodes], RED)
         draw_squares_at(screen, path, PATH_COLOR)
+        draw_squares_at(screen, obstacles, OBSTACLE_COLOR)
         draw_square_at(screen, start, START_COLOR)
         draw_square_at(screen, end, END_COLOR)
-        draw_info(screen, show_info)
+        draw_info(screen, grid, show_info)
         pygame.display.update()
 
 

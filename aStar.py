@@ -75,6 +75,7 @@ class Grid:
         self.green_nodes = []
         self.red_nodes = []
         self._create_nodes()
+        self.look_diagonal = True
 
     def _create_nodes(self):
         self.nodes = []
@@ -236,6 +237,11 @@ class Grid:
                 # make sure not looking at self position
                 if x == 0 and y == 0:
                     continue
+
+                # optional don't look diagonal
+                if abs(x) == 1 and abs(y) == 1:
+                    if not self.look_diagonal:
+                        continue
 
                 # within bounds?
                 if 0 <= node.x + x < self.x_size and 0 <= node.y + y < self.y_size:
