@@ -226,6 +226,8 @@ def main():
                     keep_finding_path = not keep_finding_path
                     if not keep_finding_path:
                         path = []
+                        grid.green_nodes = []
+                        grid.red_nodes = []
 
                 # remove most recently created obstacle
                 elif event.key == pygame.key.key_code("backspace"):
